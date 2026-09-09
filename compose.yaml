@@ -1,0 +1,45 @@
+# docker-compose.yml
+# Orquestra dois serviços: a aplicação PHP (app) e o banco de dados MySQL (db).
+# Não utilizei arquivo .env: todas as variáveis estão declaradas diretamente aqui.
+
+version: "3.9" # Define a versão da sintaxe do Docker Compose utilizada neste arquivo
+
+services: # Início da seção onde declaramos todos os containers (serviços) da aplicação
+
+  app: # Nome do serviço responsável por rodar a aplicação PHP
+    image: php:8.2-apache # Usa a imagem oficial do PHP 8.2 já com o Apache embutido, pronta no Docker Hub
+    container_name: crud-app # Define um nome fixo e amigável para o container da aplicação
+    ports:
+      - "8080:80" # Mapeia a porta 80 (Apache dentro do container) para a porta 8080 da máquina host
+    volumes:
+      - ./app:/var/www/html # Monta a pasta local "app" dentro do container, no diretório servido pelo Apache
+    environment: # Variáveis de ambiente que o código PHP usa para se conectar ao banco (via getenv())
+      DB_HOST: db # Nome do serviço do banco (Docker resolve esse nome pela rede interna, sem precisar de IP)
+      DB_USER: root # Usuário utilizado para autenticar no MySQL
+      DB_PASSWORD: root123 # Senha do usuário do MySQL (definida apenas para fins didáticos deste trabalho)
+      DB_NAME: crud_tarefas # Nome do banco de dados que a aplicação irá usar
+    depends_on:
+      - db # Garante que o container "db" seja iniciado antes do container "app"
+    networks:
+      - rede-crud # Conecta o container "app" à rede personalizada, permitindo comunicação com o "db" pelo nome
+
+  db: # Nome do serviço responsável por rodar o banco de dados
+    image: mysql:8.0 # Usa a imagem oficial do MySQL versão 8.0, disponível no Docker Hub
+    container_name: crud-db # Define um nome fixo e amigável para o container do banco de dados
+    restart: always # Reinicia o container automaticamente caso ele pare ou o Docker seja reiniciado
+    environment: # Variáveis usadas pela própria imagem oficial do MySQL para se autoconfigurar na primeira execução
+      MYSQL_ROOT_PASSWORD: root123 # Define a senha do usuário root do MySQL (deve bater com DB_PASSWORD do app)
+      MYSQL_DATABASE: crud_tarefas # Cria automaticamente esse banco de dados na primeira inicialização do container
+    ports:
+      - "3306:3306" # Mapeia a porta padrão do MySQL para a máquina host (útil para inspecionar o banco com um cliente externo)
+    volumes:
+      - dados-mysql:/var/lib/mysql # Volume nomeado que persiste os dados do banco mesmo se o container for removido
+    networks:
+      - rede-crud # Conecta o container "db" à mesma rede personalizada usada pelo "app"
+
+volumes: # Declaração dos volumes nomeados usados pelos serviços acima
+  dados-mysql: # Volume que efetivamente armazena os arquivos de dados do MySQL fora do container
+
+networks: # Declaração das redes personalizadas usadas pelos serviços acima
+  rede-crud: # Rede do tipo bridge, criada exclusivamente para este projeto
+    driver: bridge # Tipo de rede: bridge é o padrão para comunicação entre containers na mesma máquina
