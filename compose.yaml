@@ -13,6 +13,8 @@ services: # Início da seção onde declaramos todos os containers (serviços) d
       - "8080:80" # Mapeia a porta 80 (Apache dentro do container) para a porta 8080 da máquina host
     volumes:
       - ./app:/var/www/html # Monta a pasta local "app" dentro do container, no diretório servido pelo Apache
+    command: >
+      bash -c "docker-php-ext-install pdo_mysql && apache2-foreground"  
     environment: # Variáveis de ambiente que o código PHP usa para se conectar ao banco (via getenv())
       DB_HOST: db # Nome do serviço do banco (Docker resolve esse nome pela rede interna, sem precisar de IP)
       DB_USER: root # Usuário utilizado para autenticar no MySQL

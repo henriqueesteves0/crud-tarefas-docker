@@ -9,10 +9,10 @@
  */
 
 // Lê as variáveis de ambiente configuradas no serviço "app" do docker-compose.yml
-$host = getenv('DB_HOST');
-$user = getenv('DB_USER');
-$pass = getenv('DB_PASSWORD');
-$dbname = getenv('DB_NAME');
+$host = getenv('DB_HOST') ?: 'db';
+$user = getenv('DB_USER') ?: 'root';
+$pass = getenv('DB_PASSWORD') ?: 'root123';
+$dbname = getenv('DB_NAME') ?: 'crud_tarefas';
 
 try {
     // Cria a conexão PDO com o MySQL, usando UTF-8 para acentuação correta
@@ -23,7 +23,7 @@ try {
         [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
     );
 } catch (PDOException $e) {
-    // Caso o banco ainda esteja subindo (container mais lento), tentamos algumas vezes
+    // Caso o banco ainda esteja subindo (container mais lento), tentei algumas vezes
     $tentativas = 0;
     $conectou = false;
     while ($tentativas < 10 && !$conectou) {
